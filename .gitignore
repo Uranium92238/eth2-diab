@@ -1,0 +1,8 @@
+# compiled output
+*.npy
+*.pdf
+__pycache__/
+*.pyc
+diabatize
+
+# keep everything else (including .dat and .cis)
