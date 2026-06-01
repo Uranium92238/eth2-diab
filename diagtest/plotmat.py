@@ -38,4 +38,4 @@ ax.set_yticklabels(range(ROW_START, ROW_START + nrows))
 
 plt.tight_layout()
 plt.savefig(MATRIX_FILE.replace(".dat", ".png"), dpi=150, bbox_inches='tight')
-
+plt.savefig(MATRIX_FILE.replace(".dat", ".pdf"), dpi=150, bbox_inches='tight')
