@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 # --- User settings ---
-MATRIX_FILE = "H.dat"
+MATRIX_FILE = "SMO.dat"
 N = 96
 CMAP = "RdBu_r"
 ROW_START, ROW_END = 10, 30
