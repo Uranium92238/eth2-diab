@@ -446,3 +446,94 @@ VIRT_OFFSET  = 16   # global index of local virt 0
   enter $D^{ab}_{ij}$
 - **Do not** approximate any block of $S^{\text{MO}}$ as zero — the exact formula
   uses the full submatrix determinant
+
+---
+
+## Current Status — Pipeline Complete
+
+All 7 steps from the implementation plan are fully implemented, validated, and
+generalised. The working directory contains the following outputs:
+
+### Output Files
+
+| File | Description |
+|---|---|
+| `diabatize.py` | Full pipeline, general (user edits `N_*` config block at top) |
+| `plot_hmat.py` | Heatmap plotter for all three H matrices |
+| `U_raw.npy` | Raw many-body overlap matrix U, shape (16,16) |
+| `U_orth.npy` | Löwdin-orthogonalized U_orth, shape (16,16) |
+| `H_diab.npy` | Diabatic Hamiltonian in Hartree, shape (16,16) |
+| `H_diab.dat` | H_diab in eV, human-readable, multi-comment header |
+| `H_diab_eV.dat` | H_diab in eV, SMO.dat-style (single header line) |
+| `H_adiab_target_eV.dat` | diag(E_stack) in eV, SMO.dat-style |
+| `H_adiab_ref_eV.dat` | diag(E_ref) in eV, SMO.dat-style |
+| `hplots/H_diab_eV.{png,pdf}` | Heatmap of H_diab, colour scale clipped to off-diagonal range |
+| `hplots/H_adiab_target_eV.{png,pdf}` | Heatmap of H_adiab_stack (diagonal) |
+| `hplots/H_adiab_ref_eV.{png,pdf}` | Heatmap of H_adiab_inf (diagonal) |
+
+### Validated Results
+
+All non-negotiable validation criteria pass:
+- `||H_diab - H_diab.T||_max` ≈ 1e-17 (exact symmetry)
+- `max|eigvalsh(H_diab) - E_stack_sorted|` ≈ 7e-16 (machine precision eigenvalue recovery)
+- `||U_orth @ U_orth.T - I||_max` ≈ 2e-15 (exact orthogonality)
+
+Key numerical results (eV):
+
+**On-site diabatic energies** H_diab[m,m]:
+m=0: 9.04, m=1: 8.89, m=2: 10.31, m=3: 9.09, m=4: 9.91, m=5: 9.46,
+m=6: 9.77, m=7: 9.51, m=8: 8.49, m=9: 9.42, m=10: 8.40, m=11: 9.22,
+m=12: 9.43, m=13: 9.20, m=14: 8.67, m=15: 9.23
+
+**Largest off-diagonal couplings**:
+H[1,8] = −0.833 eV, H[1,10] = −0.615 eV, H[4,15] = +0.556 eV,
+H[6,7] = −0.523 eV, H[9,10] = +0.439 eV
+
+### Open Issues for Next Investigation
+
+The following were observed but not yet resolved:
+
+1. **Row/column norms of U are far below 1 for many states.**
+   `||U[m,:]||` ranges from ~0 (rows 14–15) to ~0.70. This means several
+   rinf diabatic states have very little overlap with the 16 rstack adiabats.
+   Physical question: are rows 14–15 symmetry-forbidden transitions, very
+   high-energy states outside the rstack window, or an artefact?
+
+2. **Singular values of U drop sharply after index 5.**
+   The first 6 singular values are 0.99–0.26; the remaining 10 drop to
+   1.3e-9. Löwdin inflates all of these to 1, meaning the last 10 modes of
+   U_orth are dominated by the SVD frame choice rather than physical overlap.
+   The H_diab elements coupling states m=14,15 to others are therefore
+   unreliable and should be treated with caution.
+
+3. **State assignment not yet done.**
+   The 16 rinf states have not been assigned to XT_A, XT_B, CT_1, CT_2
+   characters by inspecting the dominant $C^{(m)}_{ia}$ amplitudes. The
+   4×4 sub-block of H_diab in the {XT_A, XT_B, CT_1, CT_2} basis has
+   not yet been extracted. This is the physically most important quantity
+   (electronic coupling $J$ and charge-transfer coupling $t$).
+
+4. **Individual H_diab matrix elements are not run-to-run reproducible**
+   for states in degenerate SVD subspaces (e.g. H[9,11] differed between
+   runs). This is a known SVD sign/frame ambiguity for degenerate singular
+   values — the full matrix H_diab is invariant, but individual elements
+   within a degenerate block can rotate. Affects interpretation of couplings
+   involving states with near-identical rinf energies (e.g. the pairs
+   m=4/5, m=6/7, m=9/10, m=12/13).
+
+### Code Architecture (`diabatize.py`)
+
+The pipeline is fully general: set `N_BAS`, `N_FRZ`, `N_OCC`, `N_VIRT`,
+`N_ROOTS` and the three input filenames in the `USER CONFIGURATION` block at
+the top, and the rest runs unchanged for any TDDFT/TDA system in ORCA format.
+
+Functions (in order of the pipeline):
+- `parse_vectors(path, n_frz, n_occ, n_virt, n_roots)` — parse amplitude .dat file
+- `load_inputs(...)` — load S_MO.npy + both amplitude files, validate shapes
+- `validate_inputs(C_ref, X_tgt, n_frz)` — frozen core check + norm check
+- `build_index_arrays(n_occ, n_virt, occ_offset, virt_offset)` — build r, s
+- `build_delta_tensor(S_MO, r, s, n_occ, n_virt)` — vectorised det tensor
+- `compute_U(C_act, Delta, X_act)` — einsum contraction → U[m,k]
+- `lowdin_orthogonalize(U)` — SVD → U_orth = V @ Wt
+- `compute_H_diab(U_orth, E_tgt)` — U_orth @ diag(E) @ U_orth.T
+- `write_matrix_dat(path, mat, header)` — SMO.dat-style export
