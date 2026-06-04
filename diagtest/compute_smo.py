@@ -1,8 +1,8 @@
 import numpy as np
 
 # --- User settings ---
-RINF_MOLDEN  = "orca.molden"
-RSTACK_MOLDEN = "orca.molden"
+RINF_MOLDEN  = "ref.molden"
+RSTACK_MOLDEN = "stack.molden"
 N_MO = 96          # number of MOs (= number of AOs for a square C matrix)
 # ---------------------
 

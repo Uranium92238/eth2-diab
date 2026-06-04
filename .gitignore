@@ -4,5 +4,13 @@
 __pycache__/
 *.pyc
 diabatize
-
+*.dat
+*.png
+*.svg
+*.cis
+*.log
+*.molden
+*.xyz
+*.pdf
+diagtest
 # keep everything else (including .dat and .cis)
