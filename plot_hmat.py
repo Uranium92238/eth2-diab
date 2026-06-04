@@ -111,15 +111,13 @@ for fname, title, xlabel, ylabel, clip_offdiag in MATRICES:
     # Text colour: white on saturated cells (|val| >= vmax), black otherwise.
     for i in range(N):
         for j in range(N):
-            val = mat[i, j]
-            text_color = "white" if abs(val) >= vmax else "black"
-            ax.text(j, i, f"{val:.2f}", ha="center", va="center",
-                    fontsize=5.5, color=text_color)
+            ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1,
+                         fill=False, edgecolor="black", linewidth=0.4))
 
     plt.tight_layout()
 
     stem = Path(fname).stem
-    for ext in ("png", "pdf", "svg"):
+    for ext in ("pdf", "png"):
         outpath = OUTDIR / f"{stem}.{ext}"
         plt.savefig(outpath, dpi=500, bbox_inches="tight")
         print(f"  Saved: {outpath}")

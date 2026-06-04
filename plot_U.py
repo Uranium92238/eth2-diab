@@ -59,15 +59,13 @@ for fname, title, xlabel, ylabel, cbar_label in MATRICES:
 
     for i in range(N):
         for j in range(N):
-            val = mat[i, j]
-            text_color = "white" if abs(val) >= 0.9 * vmax else "black"
-            ax.text(j, i, f"{val:.3f}", ha="center", va="center",
-                    fontsize=5.5, color=text_color)
+            ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1,
+                         fill=False, edgecolor="black", linewidth=0.4))
 
     plt.tight_layout()
 
     stem = Path(fname).stem
-    outpath = OUTDIR / f"{stem}.svg"
+    outpath = OUTDIR / f"{stem}.pdf"
     plt.savefig(outpath, dpi=500, bbox_inches="tight")
     print(f"  Saved: {outpath}")
 
