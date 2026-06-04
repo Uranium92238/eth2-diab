@@ -664,7 +664,26 @@ if __name__ == '__main__':
 
     np.save('U_raw.npy',  U)
     np.save('U_orth.npy', U_orth)
-    print("\n  Saved: U_raw.npy, U_orth.npy")
+
+    # Row norms of U_raw — useful for diagnosing near-zero overlap rows
+    U_row_norms = np.linalg.norm(U, axis=1)
+    print(f"\n  ||U[m,:]|| row norms:")
+    for m, n in enumerate(U_row_norms):
+        print(f"    m={m:2d}  {n:.6f}")
+
+    write_matrix_dat(
+        'U_raw.dat',
+        U,
+        f"Raw many-body overlap U[m,k] = <Phi_m|Psi_k>  shape=({N_ROOTS},{N_ROOTS})  "
+        "rows=ref diabatic m, cols=target adiabatic k (0-based)"
+    )
+    write_matrix_dat(
+        'U_orth.dat',
+        U_orth,
+        f"Löwdin-orthogonalized U_orth = V @ Wt  shape=({N_ROOTS},{N_ROOTS})  "
+        "rows=ref diabatic m, cols=target adiabatic k (0-based)"
+    )
+    print("\n  Saved: U_raw.npy, U_orth.npy, U_raw.dat, U_orth.dat")
 
     print("\nStep 5 complete.")
 
@@ -759,6 +778,7 @@ if __name__ == '__main__':
     print("  Saved: H_diab_eV.dat")
     print("  Saved: H_adiab_target_eV.dat")
     print("  Saved: H_adiab_ref_eV.dat")
+    print("  Saved: U_raw.dat, U_orth.dat  (also written in Step 5)")
     print("  Format: one '#' header line, then rows of 18.11f floats (SMO.dat style)")
 
     print("\nAll steps complete.")

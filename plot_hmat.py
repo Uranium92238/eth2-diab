@@ -119,7 +119,7 @@ for fname, title, xlabel, ylabel, clip_offdiag in MATRICES:
     plt.tight_layout()
 
     stem = Path(fname).stem
-    for ext in ("png", "pdf"):
+    for ext in ("png", "pdf", "svg"):
         outpath = OUTDIR / f"{stem}.{ext}"
         plt.savefig(outpath, dpi=500, bbox_inches="tight")
         print(f"  Saved: {outpath}")
